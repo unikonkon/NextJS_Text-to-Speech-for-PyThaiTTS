@@ -5,6 +5,7 @@ import { convertTextToSpeech, TextToSpeechResponse } from '../services/api';
 
 export default function TextToSpeechForm() {
   const [text, setText] = useState('');
+  const [speed, setSpeed] = useState<number>(22050); // Default speed
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +21,7 @@ export default function TextToSpeechForm() {
     setError(null);
     
     try {
-      const response = await convertTextToSpeech(text);
+      const response = await convertTextToSpeech(text, speed);
       console.log("convertTextToSpeech--->", response);
       setAudioUrl(response.audio_url);
     } catch (err) {
@@ -32,7 +33,7 @@ export default function TextToSpeechForm() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="w-full max-w-2xl mx-auto p-6 bg-slate-50 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Text to Speech Converter</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -48,6 +49,27 @@ export default function TextToSpeechForm() {
             rows={6}
             placeholder="Type your text here..."
           />
+        </div>
+        
+        <div>
+          <label htmlFor="speed" className="block text-sm font-medium text-gray-700 mb-1">
+            Speech Speed (Sample Rate): {speed} Hz
+          </label>
+          <input
+            id="speed"
+            type="range"
+            min="11025"
+            max="44100"
+            step="50"
+            value={speed}
+            onChange={(e) => setSpeed(Math.round(Number(e.target.value)))}
+            className="w-full"
+          />
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>Slower (11025 Hz)</span>
+            <span>Default (22050 Hz)</span>
+            <span>Faster (44100 Hz)</span>
+          </div>
         </div>
         
         <button

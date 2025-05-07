@@ -3,14 +3,19 @@ export interface TextToSpeechResponse {
   audio_url: string;
 }
 
-export const convertTextToSpeech = async (text: string): Promise<TextToSpeechResponse> => {
+export interface TextToSpeechRequest {
+  text: string;
+  speed: number;
+}
+
+export const convertTextToSpeech = async (text: string, speed: number = 22050): Promise<TextToSpeechResponse> => {
   try {
     const response = await fetch('http://localhost:8000/api/convert-to-speech', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, speed }),
     });
 
     if (!response.ok) {

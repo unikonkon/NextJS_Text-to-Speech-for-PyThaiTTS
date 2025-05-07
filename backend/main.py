@@ -7,6 +7,8 @@ import uuid
 from pythaitts import TTS
 import traceback
 import shutil
+import numpy as np
+import soundfile as sf
 
 # Create directories if they don't exist
 os.makedirs("../frontend/public/audio", exist_ok=True)
@@ -24,39 +26,37 @@ app.add_middleware(
 
 class TextToSpeechRequest(BaseModel):
     text: str
+    speed: int = 22050  # Default speed is 22050 Hz
 
 @app.post("/api/convert-to-speech")
 async def convert_to_speech(request: TextToSpeechRequest):
     try:
         # Initialize TTS engine
-        tts = TTS()
+        tts = TTS(pretrained="lunarlist_onnx")
         
         # Generate a unique filename
         filename = f"{uuid.uuid4()}.wav"
         output_path = f"../frontend/public/audio/{filename}"
+
+    #    # การเซ็ตค่าแบบ กำหนดค่าเอง
+    #     output_file = tts.tts(
+    #         text=request.text,
+    #         speaker_idx="Linda",
+    #         language_idx="th-th",
+    #         return_type="file",
+    #         filename=output_path
+    #     )
         
-        # Convert text to speech using the correct method
-        # According to documentation:
-        # tts(text: str, speaker_idx: str = 'Linda', language_idx: str = 'th-th', 
-        #     return_type: str = 'file', filename: Optional[str] = None)
-        output_file = tts.tts(
-            text=request.text,
-            speaker_idx="Linda",
-            language_idx="th-th",
-            return_type="file",
-            filename=output_path
-        )
+        # Get waveform data directly
+        wave = tts.tts(text=request.text, return_type="waveform")
+        
+        # Save the waveform to WAV file with the requested speed (sample rate)
+        sf.write(output_path, wave, request.speed)
         
         # Debugging output
-        print(f"TTS returned file path: {output_file}")
-        print(f"Output path requested: {output_path}")
+        print(f"Output path: {output_path}")
         print(f"File exists: {os.path.exists(output_path)}")
-        
-        # The method might return the actual file path, which could be different from our requested path
-        # If the file exists at the returned path but not at our requested path, copy it
-        if output_file and output_file != output_path and os.path.exists(output_file) and not os.path.exists(output_path):
-            shutil.copyfile(output_file, output_path)
-            print(f"Copied file from {output_file} to {output_path}")
+        print(f"Speed (sample rate): {request.speed}")
         
         # Return the URL to the audio file
         return {"audio_url": f"/audio/{filename}"}
@@ -69,4 +69,4 @@ async def convert_to_speech(request: TextToSpeechRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run(app, host="0.0.0.0", port=8000)
